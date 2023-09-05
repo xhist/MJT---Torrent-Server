@@ -153,9 +153,11 @@ public class Client {
                                 response = (Response) in.readObject();
                             }
                             System.out.println(response);
+                            response = null;
                         }
                         writer.println("quit");
                         writer.flush();
+                        response = new Response(ResponseStatus.OK, "All files downloaded successfully.");
                     } catch (IOException e) {
                         throw new RuntimeException("There is a problem with the network communication", e);
                     }
