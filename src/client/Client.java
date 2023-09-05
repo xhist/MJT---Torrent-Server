@@ -46,7 +46,7 @@ public class Client {
         return extractedFiles;
     }
 
-    public static void validateDownload(String... arguments) throws FileNotFoundException {
+    private static void validateDownload(String... arguments) throws FileNotFoundException {
         if (arguments.length != 3) {
             throw new IllegalArgumentException(String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT,DOWNLOAD,3,"download <user_to_download_from> [{<path_to_file>},] [{<path_to_file>},]"));
         }

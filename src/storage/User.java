@@ -32,12 +32,12 @@ public class User implements UserInterface {
 
     @Override
     public int hashCode() {
-        return Objects.hash(username,host,port);
+        return username.hashCode() + host.hashCode() + port.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!obj.getClass().isAssignableFrom(UserInterface.class)) {
+        if (!(obj instanceof UserInterface)) {
             return false;
         }
         UserInterface other = (UserInterface) obj;

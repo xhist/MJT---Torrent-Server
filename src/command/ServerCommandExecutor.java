@@ -46,8 +46,8 @@ public class ServerCommandExecutor implements Executor {
     public Response register(Request request) {
         try {
             String[] arguments = request.command().arguments();
-            if (arguments.length == 0) {
-                throw new IllegalArgumentException(String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, REGISTER, 1));
+            if (arguments.length < 2) {
+                throw new IllegalArgumentException(String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, REGISTER, 2));
             }
             String[] userData = arguments[0].split("-");
             UserInterface user = UserUtils.processUser(userData);
@@ -63,8 +63,8 @@ public class ServerCommandExecutor implements Executor {
     public Response unregister(Request request) {
         try {
             String[] arguments = request.command().arguments();
-            if (arguments.length == 0) {
-                throw new IllegalArgumentException(String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, UNREGISTER, 1));
+            if (arguments.length < 2) {
+                throw new IllegalArgumentException(String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, UNREGISTER, 2));
             }
             String[] userData = arguments[0].split("-");
             UserInterface user = UserUtils.processUser(userData);
