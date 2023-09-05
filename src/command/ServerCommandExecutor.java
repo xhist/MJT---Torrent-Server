@@ -43,7 +43,7 @@ public class ServerCommandExecutor implements Executor {
         };
     }
 
-    public Response register(Request request) {
+    private Response register(Request request) {
         try {
             String[] arguments = request.command().arguments();
             if (arguments.length < 2) {
@@ -60,7 +60,7 @@ public class ServerCommandExecutor implements Executor {
         }
     }
 
-    public Response unregister(Request request) {
+    private Response unregister(Request request) {
         try {
             String[] arguments = request.command().arguments();
             if (arguments.length < 2) {
@@ -81,7 +81,7 @@ public class ServerCommandExecutor implements Executor {
         }
     }
 
-    public Response listFiles(Request request) {
+    private Response listFiles(Request request) {
         try {
             String[] arguments = request.command().arguments();
             if (arguments.length != 0) {
@@ -109,7 +109,7 @@ public class ServerCommandExecutor implements Executor {
         }
     }
 
-    public Response listUsers(Request request) {
+    private Response listUsers(Request request) {
         try {
             String[] arguments = request.command().arguments();
             if (arguments.length != 0) {
@@ -131,7 +131,7 @@ public class ServerCommandExecutor implements Executor {
         }
     }
 
-    public Response disconnect(Request request) {
+    private Response disconnect(Request request) {
         try {
             String[] arguments = request.command().arguments();
             if (arguments.length != 0) {
