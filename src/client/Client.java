@@ -14,7 +14,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,7 +28,7 @@ public class Client {
     private static final String SERVER_HOST = "localhost";
     private static final int BUFFER_SIZE = 512;
     private static ByteBuffer buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
-    private static Set<UserInterface> users;
+    private static Set<UserInterface> users; // Still wondering why we need it ??!?
     private static UserInterface currentUser = null;
     private static final String INVALID_ARGS_COUNT_MESSAGE_FORMAT =
             "Invalid count of arguments: \"%s\" expects exactly %d arguments.";
@@ -153,7 +152,6 @@ public class Client {
                                 response = (Response) in.readObject();
                             }
                             System.out.println(response);
-                            response = null;
                         }
                         writer.println("quit");
                         writer.flush();

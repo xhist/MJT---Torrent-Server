@@ -2,8 +2,6 @@ package storage;
 
 import interfaces.UserInterface;
 
-import java.util.Objects;
-
 public class User implements UserInterface {
     private final String username;
     private final String host;
