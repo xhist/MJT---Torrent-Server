@@ -9,12 +9,18 @@ import utils.UserUtils;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 // NIO, blocking
 public class Client {
@@ -42,7 +48,7 @@ public class Client {
         }
         String filesList = files.substring(1, files.length() - 1);
         filesList = filesList.replaceAll("\\s", "");
-        Set<String> extractedFiles = new HashSet<>(List.of(filesList.split(",")));
+        Set<String> extractedFiles = new LinkedHashSet<>(List.of(filesList.split(",")));
         return extractedFiles;
     }
 
@@ -57,31 +63,6 @@ public class Client {
         }
     }
 
-    /**
-     * Reads the bytes from socket and writes to file
-     *
-     * @param socketChannel
-     */
-    private static String readFileFromSocket(SocketChannel socketChannel, String destination) {
-        RandomAccessFile aFile = null;
-        try {
-            aFile = new RandomAccessFile(destination, "rw");
-            ByteBuffer buffer = ByteBuffer.allocate(1024);
-            FileChannel fileChannel = aFile.getChannel();
-            while (socketChannel.read(buffer) > 0) {
-                buffer.flip();
-                fileChannel.write(buffer);
-                buffer.clear();
-            }
-            fileChannel.close();
-            return "File " + destination + " was successfully downloaded";
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("The file could not be created or found.");
-        } catch (IOException e) {
-            throw new RuntimeException("There was problem while trying to read/write to file.");
-        }
-    }
-
     private static Response processInput(SocketChannel socketChannel, String input) throws IOException, ClassNotFoundException {
         buffer.clear(); // switch to writing mode
         buffer.put(input.getBytes()); // buffer fill
@@ -89,8 +70,8 @@ public class Client {
         socketChannel.write(buffer); // buffer drain
 
         buffer.clear(); // switch to writing mode
-        socketChannel.read(buffer); // buffer fill
-        buffer.flip(); // switch to reading mode
+        socketChannel.read(buffer);
+        buffer.flip();
 
         byte[] byteArray = new byte[buffer.remaining()];
         buffer.get(byteArray);
@@ -107,7 +88,7 @@ public class Client {
                 try {
                     String listUsers = "list-users";
                     Response response = processInput(socketChannel, listUsers);
-                    String[] usersString = response.message().split(System.lineSeparator());
+                    String[] usersString = ((String)response.message()).split(System.lineSeparator());
                     Set<UserInterface> updatedUsers = new HashSet<>();
                     for (String user : usersString) {
                         updatedUsers.add(UserUtils.processUser(user.split("-")));
@@ -153,9 +134,10 @@ public class Client {
                         System.err.println("Encountered problem during download process: " + e.getMessage());
                         continue;
                     }
-                    try (SocketChannel downloadSocketChannel = SocketChannel.open()) {
-                        UserInterface user = UserUtils.processUser(cmd.arguments()[0].split("-"));
-                        downloadSocketChannel.connect(new InetSocketAddress(user.getHost(), user.getPort()));
+                    UserInterface user = UserUtils.processUser(cmd.arguments()[0].split("-"));
+                    try (Socket downloadSocket = new Socket(user.getHost(),user.getPort());
+                        ObjectInputStream in = new ObjectInputStream(downloadSocket.getInputStream());
+                        PrintWriter writer = new PrintWriter(downloadSocket.getOutputStream())) {
                         Set<String> sourceFiles = extractFiles(cmd.arguments()[1]);
                         Set<String> destinationFiles = extractFiles(cmd.arguments()[2]);
                         Iterator<String> sourceIter = sourceFiles.iterator();
@@ -163,13 +145,17 @@ public class Client {
                         while (sourceIter.hasNext() && destinationIter.hasNext()) {
                             String source = sourceIter.next();
                             String destination = destinationIter.next();
-                            response = processInput(downloadSocketChannel, "download " + user + " " + source + " " + destination);
+                            writer.println("download " + user + " " + source + " " + destination);
+                            writer.flush();
+                            response = (Response) in.readObject();
                             if (response.status() == ResponseStatus.SENDING_FILE) {
-                                System.out.println(readFileFromSocket(downloadSocketChannel, response.message()));
-                            } else {
-                                System.out.println(response.message());
+                                Files.copy(new FileInputStream((File) in.readObject()), Paths.get(destination), REPLACE_EXISTING);
+                                response = (Response) in.readObject();
                             }
+                            System.out.println(response);
                         }
+                        writer.println("quit");
+                        writer.flush();
                     } catch (IOException e) {
                         throw new RuntimeException("There is a problem with the network communication", e);
                     }
